@@ -12,6 +12,7 @@ class ClockView(
     context: Context,
     attributeSet: AttributeSet,
 ) : View(context, attributeSet) {
+
     private var clockHeight = 0
     private var clockWidth = 0
     private var radius = 0
@@ -32,9 +33,13 @@ class ClockView(
     private var secondsHandSize = 0
     private var timePoint = 0
     private var tailSize = 0
+    private var secondsTailSize = 0
     private var rect = Rect()
+    private var mDensity = 0f
+
 
     private fun init() {
+        mDensity = resources.displayMetrics.density
         clockHeight = height
         clockWidth = width
         padding = 50
@@ -43,24 +48,18 @@ class ClockView(
         mMinimum = Math.min(clockHeight, clockWidth)
         radius = mMinimum / 2 - padding
         timeAngle = (Math.PI / 30 - Math.PI / 2).toFloat().toDouble() //!!
-        paint = Paint(
-            Paint(Paint.ANTI_ALIAS_FLAG)
-        ).apply {
-            strokeWidth = 8f
-            style = Paint.Style.STROKE
-            strokeJoin = Paint.Join.ROUND
-            strokeCap = Paint.Cap.ROUND
-            color = Color.BLACK
-        }
+        paint = Paint()
         path = Path() //??
         rect = Rect()
         hourHandSize = (radius - radius / 1.7).toInt()
-        minutesHandSize = (radius - radius / 2.4).toInt()
+        minutesHandSize = radius - radius / 2
         secondsHandSize = radius - radius / 4
         time = intArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
-        timePoint = 20
-        tailSize = 45
+        timePoint = (15 * mDensity).toInt()
+        tailSize = (35 * mDensity).toInt()
+        secondsTailSize = (45 * mDensity).toInt()
         isInit = true
+
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -78,11 +77,12 @@ class ClockView(
         paint?.reset()
         paint?.color = colour
         paint?.style = stroke
-        paint?.strokeWidth = strokeWidth.toFloat()
+        paint?.strokeWidth = strokeWidth * mDensity.toFloat()
         paint?.isAntiAlias = true
     }
 
     private fun drawCircle(canvas: Canvas) {
+        setPaintAttributes(Color.BLACK, Paint.Style.STROKE, 7)
         paint?.let {
             canvas.drawCircle(
                 centerX.toFloat(), centerY.toFloat(), radius.toFloat(),
@@ -92,13 +92,6 @@ class ClockView(
     }
 
     private fun drawHands(canvas: Canvas) {
-//        val calendar: Calendar = Calendar.getInstance()
-//        mHour =
-//            calendar.get(Calendar.HOUR_OF_DAY)
-//                .toFloat() //convert to 12hour format from 24 hour format
-//        mHour = if (mHour > 12) mHour - 12 else mHour
-//        mMinute = calendar.get(Calendar.MINUTE).toFloat()
-//        mSecond = calendar.get(Calendar.SECOND).toFloat()
         val calendar: Calendar = Calendar.getInstance()
         mHour =
             calendar.get(Calendar.HOUR_OF_DAY)
@@ -113,7 +106,7 @@ class ClockView(
 
     private fun drawMinuteHand(canvas: Canvas, location: Float) {
         paint?.reset()
-        setPaintAttributes(Color.RED, Paint.Style.STROKE, 6)
+        setPaintAttributes(Color.RED, Paint.Style.STROKE, 5)
         timeAngle = Math.PI * location / 30 - Math.PI / 2
         val startX = centerX - cos(timeAngle) * (minutesHandSize - tailSize)
         val startY = centerX - sin(timeAngle) * (minutesHandSize - tailSize)
@@ -145,11 +138,11 @@ class ClockView(
 
     private fun drawSecondsHand(canvas: Canvas, location: Float) {
         paint?.reset()
-        setPaintAttributes(Color.BLACK, Paint.Style.STROKE, 8)
+        setPaintAttributes(Color.BLACK, Paint.Style.STROKE, 6)
         timeAngle = Math.PI * location / 30 - Math.PI / 2
         canvas.drawLine(
-            (centerX - cos(timeAngle) * (secondsHandSize - tailSize)).toFloat(),
-            (centerX - sin(timeAngle) * (secondsHandSize - tailSize)).toFloat(),
+            (centerX - cos(timeAngle) * (secondsHandSize - secondsTailSize)).toFloat(),
+            (centerX - sin(timeAngle) * (secondsHandSize - secondsTailSize)).toFloat(),
             (centerX + cos(timeAngle) * secondsHandSize).toFloat(),
             (centerY + sin(timeAngle) * secondsHandSize).toFloat(),
             paint!!
@@ -159,7 +152,7 @@ class ClockView(
 
     private fun drawNumerals(canvas: Canvas) {
         paint?.reset()
-        setPaintAttributes(Color.BLACK, Paint.Style.STROKE, 8)
+        setPaintAttributes(Color.BLACK, Paint.Style.STROKE, 6)
         for (line in time) {
             val angle = Math.PI / 6 * (line - 3)
             val x = (centerX + cos(angle) * radius - rect.width() / 2)
